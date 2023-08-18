@@ -3,7 +3,8 @@ import os.path
 import datetime
 import mistapi
 import UIToolsP3
-import logging
+import sys
+import getopt
 
 env_file_path = "./mist_env"
 settings_dir_path = './settings_files/'
@@ -13,7 +14,7 @@ def build_session():
     if os.path.isfile(env_file_path):
         session = mistapi.APISession(env_file=env_file_path)
     else:
-        print('Could not find .mist_env file. Consider adding one to make log in easier')
+        print('Could not find mist_env file at '+env_file_path+'. Consider adding one to make log in easier')
         session = mistapi.APISession()
     return session
 
@@ -21,14 +22,14 @@ def get_org_id(no_env_file=False):
     #Check of the org idea is in the env file
     if not no_env_file:
         if not os.path.isfile(env_file_path):
-            print('Could not find .mist_env file. Consider adding one with MIST_ORG_ID')
+            print('Could not find mist_env file. Consider adding one with MIST_ORG_ID')
         else:
             f = open(env_file_path, 'r')
             for l in f:
                 if l.startswith('MIST_ORG_ID = '):
                     org_id = l[14:50]
                     return org_id
-            print("Could not find MIST_ORG_ID in .mist_env file, consider adding it")
+            print("Could not find MIST_ORG_ID in mist_env file, consider adding it")
 
     org_id = mistapi.cli.select_org(mist_session)[0]
     return org_id
@@ -80,18 +81,30 @@ def print_org():
     getOrg = mistapi.api.v1.orgs.orgs.getOrg(mist_session, org_id)
     UIToolsP3.printSubHeader('Current Org: '+getOrg.data['name'])
 
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'e:', ['env_file='])
+    print(sys.argv)
+except getopt.GetoptError as err:
+    print("Error with system arguments. Options are -e or --env_file to specify environment file")
+    print(err)
+    quit()
+for opt, arg, in opts:
+    print('opt: '+opt+', arg: '+arg)
+    if opt in ('-e', '--env_file'):
+        env_file_path = arg
+    else:
+        print("Unhandled argument: "+opt)
+
 #Set mist_session and org_id globals
 UIToolsP3.printHeader('Mist Site Settings Applier')
 mist_session = build_session()
 mist_session.login()
 org_id = get_org_id()
 
+#Build main menu obj
+main_menu = UIToolsP3.Menu('Main Menu')
+main_menu.menuOptions = {'Pull Site Settings': pull_site_settings, 'Push Site Settings': push_site_settings, 'Change Org': change_org, 'Quit': 'Quit'}
+main_menu.print_func = print_org
 
-if __name__ == '__main__':
-
-    #Build main menu obj
-    main_menu = UIToolsP3.Menu('Main Menu')
-    main_menu.menuOptions = {'Pull Site Settings': pull_site_settings, 'Push Site Settings': push_site_settings, 'Change Org': change_org, 'Quit': 'Quit'}
-    main_menu.print_func = print_org
-
-    main_menu.show()
+main_menu.show()
