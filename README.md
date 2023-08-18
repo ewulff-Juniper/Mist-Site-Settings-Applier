@@ -10,7 +10,7 @@ Name). This results in a json file with all of the site settings. The user can t
 containing settings they would like to change. Then these settings can be bulk uploaded to any number of sites at once. 
 This script can also be used for creating and restoring backups for site settings.
 ### Environment File
-It is recommended to set up an environment file with a token to expedite the authentication process. 
+It is recommended to set up an environment file with the name: .mist_env with a token to expedite the authentication process. 
 [Here](https://api-class.mist.com/rest/create/api_tokens/) is more info on how to get a Mist token. 
 Below is an example of an enviroment file:
 ```commandline
