@@ -7,8 +7,12 @@ import sys
 import getopt
 
 env_file_path = "./mist_env"
+
 settings_dir_path = './settings_files/'
+if not os.path.isdir(settings_dir_path): os.mkdir(settings_dir_path)
+
 pulled_settings_dir_path = './settings_files/pulled_settings_files/'
+if not os.path.isdir(pulled_settings_dir_path): os.mkdir(pulled_settings_dir_path)
 
 def build_session():
     #Build session, preferably with env file
