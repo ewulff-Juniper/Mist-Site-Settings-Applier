@@ -8,6 +8,7 @@ import getopt
 
 env_file_path = "./mist_env"
 settings_dir_path = './settings_files/'
+pulled_settings_dir_path = './settings_files/pulled_settings_files/'
 
 def build_session():
     #Build session, preferably with env file
@@ -39,11 +40,19 @@ def pull_site_settings():
 
     #Select sites and pull
     site_ids = mistapi.cli.select_site(mist_session, org_id=org_id, allow_many=True)
+    if len(site_ids) > 1:
+        org_name = mistapi.api.v1.orgs.orgs.getOrg(mist_session, org_id).data['name']
+        dir_name = org_name+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')
+        path = pulled_settings_dir_path+dir_name+'/'
+        os.mkdir(path)
+    else:
+        path = pulled_settings_dir_path
+
     for site_id in site_ids:
         site_settings = mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site_id)
         site_info = mistapi.api.v1.sites.sites.getSiteInfo(mist_session, site_id) #Site info is just for site name for file name
         file_name = site_info.data['name']+'__'+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')+'.json' #Name file with date/time
-        with open(settings_dir_path+file_name, 'w+') as f:
+        with open(path+file_name, 'w+') as f:
             f.write(json.dumps(site_settings.data, indent=4))
 
 def push_site_settings():
