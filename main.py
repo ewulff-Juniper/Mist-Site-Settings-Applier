@@ -5,7 +5,7 @@ import mistapi
 import UIToolsP3
 import logging
 
-env_file_path = "./.mist_env"
+env_file_path = "./mist_env"
 settings_dir_path = './settings_files/'
 
 def build_session():
