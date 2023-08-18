@@ -1,0 +1,14 @@
+{
+  "rogue": {
+        "min_rssi": -80,
+        "min_duration": 10,
+        "enabled": true,
+        "honeypot_enabled": true,
+        "whitelisted_bssids": [
+            ""
+        ],
+        "whitelisted_ssids": [
+            ""
+        ]
+    }
+}
