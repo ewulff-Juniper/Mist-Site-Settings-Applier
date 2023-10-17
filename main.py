@@ -5,6 +5,7 @@ import mistapi
 import UIToolsP3
 import sys
 import getopt
+import csv
 
 env_file_path = "./mist_env"
 
@@ -42,9 +43,11 @@ def get_org_id(no_env_file=False):
 def pull_site_settings():
     UIToolsP3.printSubHeader('Pull Site Settings')
 
+    all_site_vars = [['']]
+
     #Select sites and pull
     site_ids = mistapi.cli.select_site(mist_session, org_id=org_id, allow_many=True)
-    if len(site_ids) > 1:
+    if len(site_ids) > 1: #If multiple sites create a org folder with date/time
         org_name = mistapi.api.v1.orgs.orgs.getOrg(mist_session, org_id).data['name']
         dir_name = org_name+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')
         path = pulled_settings_dir_path+dir_name+'/'
@@ -52,12 +55,29 @@ def pull_site_settings():
     else:
         path = pulled_settings_dir_path
 
+    index = 0
     for site_id in site_ids:
         site_settings = mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site_id)
         site_info = mistapi.api.v1.sites.sites.getSiteInfo(mist_session, site_id) #Site info is just for site name for file name
-        file_name = site_info.data['name']+'__'+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')+'.json' #Name file with date/time
+        site_name = site_info.data['name']
+        file_name = site_name+'__'+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')+'.json' #Name file with date/time
         with open(path+file_name, 'w+') as f:
             f.write(json.dumps(site_settings.data, indent=4))
+        if site_settings.data['vars']:
+            index += 1
+            all_site_vars.append([site_name])
+            for var in site_settings.data['vars']:
+                if var not in all_site_vars[0]:
+                    all_site_vars[0].append(var)
+                var_index = all_site_vars[0].index(var)
+                while var_index >= len(all_site_vars[index]):
+                    all_site_vars[index].append('')
+                all_site_vars[index][var_index] = site_settings.data['vars'][var]
+
+    with open(path+"vars__"+datetime.datetime.now().strftime('%b-%d-%Y_%H-%M-%S')+'.csv', 'w+') as f:
+        csvwriter = csv.writer(f)
+        csvwriter.writerows(all_site_vars)
+
 
 def push_site_settings():
     UIToolsP3.printSubHeader('Push Site Settings')
@@ -87,7 +107,9 @@ def push_site_settings():
 
 def change_org():
     #If use wants to change the org then we shouldn't use the env file
-    get_org_id(no_env_file=True)
+    new_org_id = get_org_id(no_env_file=True)
+    global org_id
+    org_id = new_org_id
 
 def print_org():
     #Get org name and print
@@ -120,4 +142,5 @@ main_menu = UIToolsP3.Menu('Main Menu')
 main_menu.menuOptions = {'Pull Site Settings': pull_site_settings, 'Push Site Settings': push_site_settings, 'Change Org': change_org, 'Quit': 'Quit'}
 main_menu.print_func = print_org
 
+#Start
 main_menu.show()
